@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: |
-          clang++ -dynamiclib -arch arm64 -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework UIKit -framework CoreGraphics -framework QuartzCore main.mm -o AutoClicker.dylib
+          clang++ -dynamiclib -arch arm64 -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework Foundation -framework UIKit -framework CoreGraphics -framework QuartzCore main.mm -o AutoClicker.dylib
       - uses: actions/upload-artifact@v4
         with:
           name: Dylib
