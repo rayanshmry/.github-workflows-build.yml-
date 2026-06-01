@@ -4,7 +4,7 @@
 #import <substrate.h>
 #import <pthread.h>
 
-// الإعلان عن الواجهات المخفية لمنع أخطاء المترجم (Forward Declarations)
+// الإعلان عن الواجهات والأساليب المخفية للنظام لمنع أخطاء المترجم (Forward Declarations)
 @interface UIEvent (MoustacheClicker)
 - (void)_clearTouches;
 - (void)_addTouch:(UITouch *)touch forRawEvent:(id)event;
@@ -23,6 +23,7 @@
 - (instancetype)initWithFrame:(CGRect)frame count:(NSInteger)count {
     self = [super initWithFrame:frame];
     if (self) {
+        // تصميم الهدف العائم (لون فيروزي مضيء شفاف مع حد نيون حاد)
         self.backgroundColor = [[UIColor colorWithRed:0.00 green:1.00 blue:0.80 alpha:1.0] colorWithAlphaComponent:0.6];
         self.layer.cornerRadius = frame.size.width / 2;
         self.layer.borderWidth = 3;
@@ -35,6 +36,7 @@
         self.numberLabel.font = [UIFont boldSystemFontOfSize:14];
         [self addSubview:self.numberLabel];
         
+        // إيماءة السحب والتحريك للهدف العائم
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
         [self addGestureRecognizer:pan];
     }
@@ -79,12 +81,14 @@
     self.isClicking = NO;
     self.targets = [[NSMutableArray alloc] init];
     
+    // إنشاء نافذة شفافة تغطي الشاشة بالكامل لتمرير اللمسات بدون تجميد الخلفية
     CGRect screenBounds = [UIScreen mainScreen].bounds;
     self.menuWindow = [[UIWindow alloc] initWithFrame:screenBounds];
     self.menuWindow.windowLevel = UIWindowLevelAlert + 1;
     self.menuWindow.backgroundColor = [UIColor clearColor];
     self.menuWindow.userInteractionEnabled = YES;
     
+    // دعم إقلاع النافذة على الألعاب الحديثة لنظام iOS 13 فما فوق
     if (@available(iOS 13.0, *)) {
         for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
             if (scene.activationState == UISceneActivationStateForegroundActive) {
@@ -100,7 +104,7 @@
     self.menuWindow.hidden = NO;
 }
 
-// 1. الزر العائم المستمر مع السحب وتحكم كامل
+// 1. الزر العائم المستمر مع السحب وتحكم كامل (تاج + شنب + اسم موستاش)
 - (void)createFloatingButton {
     self.floatingButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.floatingButton.frame = CGRectMake(40, 150, 85, 85);
@@ -108,6 +112,7 @@
     self.floatingButton.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.floatingButton.titleLabel.font = [UIFont boldSystemFontOfSize:11];
     
+    // الألوان المطلوبة (خلفية بنفسجي داكن نيون + إطار فيروزي مضيء)
     self.floatingButton.backgroundColor = [UIColor colorWithRed:0.09 green:0.04 blue:0.17 alpha:1.0];
     self.floatingButton.layer.cornerRadius = 42.5;
     self.floatingButton.layer.borderWidth = 3;
@@ -129,7 +134,7 @@
     [pan setTranslation:CGPointZero inView:self.menuWindow];
 }
 
-// 2. تصميم قائمة المود المتحركة بالكامل (ألوان نيون وردية ملكية)
+// 2. تصميم قائمة المود المتحركة بالكامل (ألوان نيون وردية ملكية غامقة مريحة للعين)
 - (void)createModMenu {
     CGRect screenBounds = [UIScreen mainScreen].bounds;
     self.menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 310, 390)];
@@ -141,6 +146,7 @@
     self.menuView.layer.borderColor = [UIColor colorWithRed:1.00 green:0.00 blue:0.50 alpha:1.0].CGColor;
     self.menuView.hidden = YES;
     
+    // إمكانية سحب وتحريك القائمة بالكامل على الشاشة في حال كانت تحجب الرؤية
     UIPanGestureRecognizer *menuPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleMenuPan:)];
     [self.menuView addGestureRecognizer:menuPan];
     
@@ -151,32 +157,38 @@
     titleLabel.font = [UIFont boldSystemFontOfSize:16];
     [self.menuView addSubview:titleLabel];
     
+    // زر إضافة هدف
     UIButton *btnAddTarget = [self createStyledButton:@"🎯 إضافة هدف على الشاشة" frame:CGRectMake(25, 65, 260, 42) colorHex:@"#00FFCC"];
     [btnAddTarget addTarget:self action:@selector(addNewTarget) forControlEvents:UIControlEventTouchUpInside];
     [self.menuView addSubview:btnAddTarget];
     
+    // زر مسح الأهداف
     UIButton *btnClearTargets = [self createStyledButton:@"🗑️ مسح كافة الأهداف" frame:CGRectMake(25, 115, 260, 42) colorHex:@"#FF9900"];
     [btnClearTargets addTarget:self action:@selector(clearAllTargets) forControlEvents:UIControlEventTouchUpInside];
     [self.menuView addSubview:btnClearTargets];
     
+    // نص شريط السرعة
     self.speedLabel = [[UILabel alloc] initWithFrame:CGRectMake(25, 175, 260, 20)];
     self.speedLabel.text = [NSString stringWithFormat:@"⚡ سرعة النقر التلقائي: %.0fms", self.clickSpeedMs];
     self.speedLabel.textColor = [UIColor whiteColor];
     self.speedLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
     [self.menuView addSubview:self.speedLabel];
     
+    // شريط تحكم بالسرعة Slider
     UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(25, 205, 260, 30)];
-    slider.minimumValue = 10.0; 
+    slider.minimumValue = 10.0; // تبدأ من سرعة نفاثة 10 ملي ثانية بدون تجميد
     slider.maximumValue = 1500.0;
     slider.value = self.clickSpeedMs;
     slider.minimumTrackTintColor = [UIColor colorWithRed:1.00 green:0.00 blue:0.50 alpha:1.0];
     [slider addTarget:self action:@selector(sliderChanged:) forControlEvents:UIControlEventValueChanged];
     [self.menuView addSubview:slider];
     
+    // زر تشغيل (أخضر نيون)
     UIButton *btnStart = [self createStyledButton:@"▶ تشغيل" frame:CGRectMake(25, 265, 125, 48) colorHex:@"#00FF00"];
     [btnStart addTarget:self action:@selector(startClicker) forControlEvents:UIControlEventTouchUpInside];
     [self.menuView addSubview:btnStart];
     
+    // زر إيقاف (أحمر نيون)
     UIButton *btnStop = [self createStyledButton:@"🛑 إيقاف" frame:CGRectMake(160, 265, 125, 48) colorHex:@"#FF0000"];
     [btnStop addTarget:self action:@selector(stopClicker) forControlEvents:UIControlEventTouchUpInside];
     [self.menuView addSubview:btnStop];
@@ -202,17 +214,3 @@
 - (void)clearAllTargets {
     [self stopClicker];
     for (MoustacheTargetView *target in self.targets) {
-        [target removeFromSuperview];
-    }
-    [self.targets removeAllObjects];
-}
-
-- (UIButton *)createStyledButton:(NSString *)title frame:(CGRect)frame colorHex:(NSString *)hex {
-    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-    btn.frame = frame;
-    [btn setTitle:title forState:UIControlStateNormal];
-    btn.titleLabel.font = [UIFont boldSystemFontOfSize:14];
-    
-    unsigned int rgbValue = 0;
-    NSScanner *scanner = [NSScanner scannerWithString:[hex stringByReplacingOccurrencesOfString:@"#" withString:@""]];
-    [scanner scanHexInt:&rgbValue];
