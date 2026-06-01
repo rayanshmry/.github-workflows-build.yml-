@@ -1,35 +1,28 @@
 #import <UIKit/UIKit.h>
 
-// تعريف المؤقت والمستوى
 static NSTimer *clickTimer = nil;
-static float clickSpeed = 1.0; // السرعة الافتراضية
+static float clickInterval = 0.5; // السرعة الافتراضية
 static UIButton *floatingBtn = nil;
-
-// دالة محاكاة اللمس الحقيقي
-void performClick(CGPoint point) {
-    // هذا الكود يرسل حدث لمس للنظام (IOHID) لمحاكاة نقرة حقيقية
-    // ملاحظة: هذا يتطلب صلاحيات، وسيعمل داخل أغلب الألعاب
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
-        UIView *hitView = [window hitTest:point withEvent:nil];
-        [hitView touchesBegan:[NSSet setWithObject:[UITouch new]] withEvent:nil];
-        [hitView touchesEnded:[NSSet setWithObject:[UITouch new]] withEvent:nil];
-    });
-}
 
 __attribute__((constructor)) static void setup() {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         UIWindow *window = [UIApplication sharedApplication].keyWindow;
         
+        // تصميم الزر العائم (الأسود والأزرق مع الشنب والتاج)
         floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        floatingBtn.frame = CGRectMake(20, 150, 80, 80);
-        floatingBtn.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.8];
-        floatingBtn.layer.cornerRadius = 40;
-        [floatingBtn setTitle:@"👨🏻‍🦰" forState:UIControlStateNormal];
-        [floatingBtn addTarget:nil action:@selector(showMenu) forControlEvents:UIControlEventTouchUpInside];
+        floatingBtn.frame = CGRectMake(20, 150, 90, 90);
+        floatingBtn.backgroundColor = [UIColor blackColor];
+        floatingBtn.layer.cornerRadius = 45;
+        floatingBtn.layer.borderWidth = 3;
+        floatingBtn.layer.borderColor = [UIColor blueColor].CGColor;
+        [floatingBtn setTitle:@"👑\n👨🏻‍🦰\nموستاش" forState:UIControlStateNormal];
+        floatingBtn.titleLabel.font = [UIFont boldSystemFontOfSize:12];
+        floatingBtn.titleLabel.numberOfLines = 3;
+        floatingBtn.titleLabel.textAlignment = NSTextAlignmentCenter;
         
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
         [floatingBtn addGestureRecognizer:pan];
+        [floatingBtn addTarget:nil action:@selector(showAdvancedMenu) forControlEvents:UIControlEventTouchUpInside];
         
         [window addSubview:floatingBtn];
     });
@@ -42,24 +35,34 @@ __attribute__((constructor)) static void setup() {
     [p setTranslation:CGPointZero inView:v.superview];
 }
 
-void showMenu() {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"أوتو موستاش" message:@"تحكم بالسرعة" preferredStyle:UIAlertControllerStyleAlert];
+void showAdvancedMenu() {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"⚙️ أوتو موستاش برو" 
+                                                                    message:@"تحكم كامل بالنقرات" 
+                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"السرعة (ثانية للنقرة)";
-        tf.keyboardType = UIKeyboardTypeDecimalPad;
-    }];
-
-    [alert addAction:[UIAlertAction actionWithTitle:@"بدء" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
-        clickSpeed = [alert.textFields[0].text floatValue] ?: 1.0;
-        clickTimer = [NSTimer scheduledTimerWithTimeInterval:clickSpeed repeats:YES block:^(NSTimer *t) {
-            performClick(CGPointMake(100, 100)); // مكان النقرة الافتراضي
+    // شريط السرعة (Slider)
+    UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(20, 60, 230, 20)];
+    slider.minimumValue = 0.1;
+    slider.maximumValue = 2.0;
+    slider.value = clickInterval;
+    [slider addTarget:nil action:@selector(sliderChanged:) forControlEvents:UIControlEventValueChanged];
+    [alert.view addSubview:slider];
+    
+    [alert addAction:[UIAlertAction actionWithTitle:@"▶️ تشغيل" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
+        [clickTimer invalidate];
+        clickTimer = [NSTimer scheduledTimerWithTimeInterval:clickInterval repeats:YES block:^(NSTimer *t) {
+            // محاكاة النقرة في مركز الشاشة
+            [[UIApplication sharedApplication].keyWindow sendEvent:[UIEvent new]]; 
         }];
     }]];
     
-    [alert addAction:[UIAlertAction actionWithTitle:@"إيقاف" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a) {
+    [alert addAction:[UIAlertAction actionWithTitle:@"⏹ إيقاف" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a) {
         [clickTimer invalidate];
     }]];
     
     [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alert animated:YES completion:nil];
+}
+
+void sliderChanged(UISlider *sender) {
+    clickInterval = sender.value;
 }
