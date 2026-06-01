@@ -8,7 +8,8 @@ jobs:
       - name: Build
         run: |
           clang++ -dynamiclib -arch arm64 -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework Foundation -framework UIKit -framework CoreGraphics -framework QuartzCore main.mm -o AutoClicker.dylib
-      - uses: actions/upload-artifact@v4
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: Dylib
-          path: ./AutoClicker.dylib
+          path: AutoClicker.dylib
