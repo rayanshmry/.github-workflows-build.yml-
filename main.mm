@@ -1,49 +1,45 @@
 #import <UIKit/UIKit.h>
 
-// تعريفات المتغيرات
-static UIWindow *overlayWindow = nil;
+// متغيرات عامة
 static UIButton *floatingBtn = nil;
 static NSTimer *clickTimer = nil;
 static float clickInterval = 0.5;
 
-@interface OverlayManager : NSObject
-+ (void)showOverlay;
-+ (void)handlePan:(UIPanGestureRecognizer *)p;
+@interface ClickerManager : NSObject
++ (void)createFloatingButton;
 + (void)showMenu;
 @end
 
-@implementation OverlayManager
+@implementation ClickerManager
 
-+ (void)showOverlay {
-    // إنشاء نافذة مستقلة للأداة لضمان الظهور الدائم
-    overlayWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    overlayWindow.windowLevel = UIWindowLevelAlert + 1;
-    overlayWindow.hidden = NO;
-    overlayWindow.backgroundColor = [UIColor clearColor];
-
-    // إنشاء الزر
-    floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    floatingBtn.frame = CGRectMake(20, 200, 90, 90);
-    floatingBtn.backgroundColor = [UIColor blackColor];
-    floatingBtn.layer.cornerRadius = 45;
-    floatingBtn.layer.borderWidth = 3;
-    floatingBtn.layer.borderColor = [UIColor blueColor].CGColor;
++ (void)createFloatingButton {
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    if (!window) window = [[UIApplication sharedApplication].windows firstObject];
     
-    // التاج والشنب والاسم
-    [floatingBtn setTitle:@"👑\n👨🏻‍🦰\nموستاش" forState:UIControlStateNormal];
-    floatingBtn.titleLabel.font = [UIFont boldSystemFontOfSize:12];
-    floatingBtn.titleLabel.numberOfLines = 3;
+    // زر متوسط الحجم (60x60)
+    floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    floatingBtn.frame = CGRectMake(20, 200, 60, 60);
+    floatingBtn.backgroundColor = [UIColor blackColor];
+    floatingBtn.layer.cornerRadius = 30;
+    floatingBtn.layer.borderWidth = 2;
+    floatingBtn.layer.borderColor = [UIColor blueColor].CGColor;
+    floatingBtn.layer.masksToBounds = YES;
+    
+    // شكل الزر (تاج واسم)
+    [floatingBtn setTitle:@"👑\nم" forState:UIControlStateNormal];
+    floatingBtn.titleLabel.font = [UIFont boldSystemFontOfSize:10];
+    floatingBtn.titleLabel.numberOfLines = 2;
     floatingBtn.titleLabel.textAlignment = NSTextAlignmentCenter;
     
-    // تفعيل التحريك
+    // تفعيل التحريك (سحب الزر)
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     [floatingBtn addGestureRecognizer:pan];
     
     // تفعيل الضغط
     [floatingBtn addTarget:self action:@selector(showMenu) forControlEvents:UIControlEventTouchUpInside];
     
-    [overlayWindow addSubview:floatingBtn];
-    [overlayWindow makeKeyAndVisible];
+    [window addSubview:floatingBtn];
+    [window bringSubviewToFront:floatingBtn];
 }
 
 + (void)handlePan:(UIPanGestureRecognizer *)p {
@@ -54,12 +50,21 @@ static float clickInterval = 0.5;
 }
 
 + (void)showMenu {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"🤖 أوتو موستاش" message:@"تحكم بالنقرات الحقيقية" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"🤖 أوتو موستاش" 
+                                                                    message:@"السرعة (ثانية/نقرة)" 
+                                                             preferredStyle:UIAlertControllerStyleAlert];
+    
+    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.placeholder = @"0.5";
+        tf.keyboardType = UIKeyboardTypeDecimalPad;
+        tf.text = [NSString stringWithFormat:@"%.1f", clickInterval];
+    }];
     
     [alert addAction:[UIAlertAction actionWithTitle:@"▶️ تشغيل" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
+        clickInterval = [alert.textFields[0].text floatValue];
         [clickTimer invalidate];
         clickTimer = [NSTimer scheduledTimerWithTimeInterval:clickInterval repeats:YES block:^(NSTimer *t) {
-            // محاكاة نقرة حقيقية
+            // تنفيذ النقرة
             [[UIApplication sharedApplication] sendEvent:[UIEvent new]];
         }];
     }]];
@@ -68,14 +73,13 @@ static float clickInterval = 0.5;
         [clickTimer invalidate];
     }]];
     
-    [overlayWindow.rootViewController presentViewController:alert animated:YES completion:nil];
+    [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alert animated:YES completion:nil];
 }
 
 @end
 
-// تفعيل الأداة عند تشغيل اللعبة
 __attribute__((constructor)) static void init() {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [OverlayManager showOverlay];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [ClickerManager createFloatingButton];
     });
 }
