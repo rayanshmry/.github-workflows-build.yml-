@@ -165,11 +165,11 @@
     [btnClearTargets addTarget:self action:@selector(clearAllTargets) forControlEvents:UIControlEventTouchUpInside];
     [self.menuView addSubview:btnClearTargets];
     
-    // نص شريط السرعة
+    // نص شريط السرعة (تصحيح دالة الخط هنا)
     self.speedLabel = [[UILabel alloc] initWithFrame:CGRectMake(25, 175, 260, 20)];
     self.speedLabel.text = [NSString stringWithFormat:@"⚡ سرعة النقر التلقائي: %.0fms", self.clickSpeedMs];
     self.speedLabel.textColor = [UIColor whiteColor];
-    self.speedLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeight some font:UIFontWeightSemibold];
+    self.speedLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
     [self.menuView addSubview:self.speedLabel];
     
     // شريط السرعة Slider
